@@ -1,4 +1,4 @@
-function y = get_bootstrap(datap,datam,len,numofbootstrap)
+function y = get_bootstrap(datap,datam,numofbootstrap,delt,Hz)
 
 for i=1:numofbootstrap
     % 1. bootstrap and calculate mean velocity
@@ -11,11 +11,12 @@ for i=1:numofbootstrap
     bootm = datasample(datam,size(datap,1));
     
     % 3. calculate diff_vel of mean velocities
-    ytmp = nanmean(bootp) - nanmean(bootm);
-    stable = nanmean(ytmp(1:13));
-    ytmp = ytmp-stable; % velocity starts from zero
-    ytmp = ytmp(1:len);
+    ytmp_130 = nanmean(bootp) - nanmean(bootm);
+    ytmp = resample(ytmp_130,1/delt,Hz)*Hz; % resample to 1000Hz
+    ytmp = ytmp(101:end); % subtract 100 ms instrument delay
+    ytmp = ytmp - mean(ytmp(1:100)); % subtract baseline
     y(i,:) = ytmp;
+    
 end
 
 % 4. optimization
