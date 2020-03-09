@@ -4,7 +4,7 @@ delt = plant.delt;
 
 Tjump = ceil(X(1)/delt); % mean time of Target Jump is gittered (gausian distribition)
 sigma = abs(X(2))/delt; % variance of response time 
-uamp = X(3); % amplitude of fitting function
+uamp = 1;%X(3); % amplitude of fitting function
 % uamp = X(2); % amplitude of fitting function
 
 % adjust high level parameters

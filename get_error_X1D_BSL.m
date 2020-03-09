@@ -17,7 +17,10 @@ time = 0.001;
 
 % calculate error between simulation and acual data 
 if m == 5 || m == 6 || m == 3 % input is acceleration
-    e2 = nanmean((y(1:imax)-sim.acc(1:imax)).^2); 
+    
+    %Aopt = y(1:imax)/
+    A = y(1:imax)/sim.acc(1:imax);
+    e2 = nanmean((y(1:imax)-A*sim.acc(1:imax)).^2); 
 %     figure(3); clf; hold on
 %     
 %     plot(time*(1:length(y(1:imax))),y(1:imax),'m')
@@ -30,12 +33,13 @@ if m == 5 || m == 6 || m == 3 % input is acceleration
 
 else % input is velocity
 %     e2 = nanmean((y(1:imax)-sim.x(1:imax)).^2);
-    e2 = nanmean((y(1:imax)-sim.convo(1:imax)).^2);
+    A = y(1:imax)/sim.convo(1:imax);
+    e2 = nanmean((y(1:imax)-A*sim.convo(1:imax)).^2);
     figure(3); clf; hold on
 
     plot(time*(1:length(y)),y,'m')
-    plot(time*(1:length(sim.convo)),sim.convo,'b')
-    plot(time*(1:length((y(1:imax)-sim.convo(1:imax)))),(y(1:imax)-sim.convo(1:imax)),'r')
+    plot(time*(1:length(A*sim.convo)),sim.convo,'b')
+    plot(time*(1:length((y(1:imax)-A*sim.convo(1:imax)))),(y(1:imax)-A*sim.convo(1:imax)),'r')
 
 %     plot(y,'m')
 %     plot(sim.x,'b')

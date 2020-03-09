@@ -29,9 +29,11 @@ Hz = 130;
 % Gstock = 0.05;  % 0.07 mean vel for all
 % Sstock = 0.002; % 0.002 mean vel for all
 % Ustock = 0.005; % 0.005 mean vel for all
-Gstock = [0.05 0.06 0.07 0.08 0.09];
-Sstock = [0.001 0.002 0.003 0.004 0.005];
-Ustock = [0.004 0.005 0.006 0.007 0.008];
+%Gstock = [0.05 0.06 0.07 0.08 0.09];
+%Sstock = [0.001 0.002 0.003 0.004 0.005];
+Gstock = [0.05 0.07 0.09];
+Sstock = [0.001 0.003 0.005];
+%Ustock = [.004 .008];%0.004 0.005 0.006 0.007 0.008];
 
 % c = 5;
 % fhandle = figure(c); clf; hold on
@@ -71,8 +73,8 @@ switch m
     case 3 % each subject acc data with bootstrap
         disp('bootstrap acc data')
         load AllData.mat
-        numofsubjects = 20;
-        numofbootstraps = 5;
+        numofsubjects = 1; %20
+        numofbootstraps = 2; %5
     case 4 % mean velocity of each subject
         disp('mean vel of each sub')
         load AllData.mat
@@ -147,29 +149,39 @@ for subject = 1:numofsubjects
                 
                 Sinit = Sstock(j);
                 
-                for k = 1:length(Ustock)
+                %for k = 1:length(Ustock)
                     
-                Uinit = Ustock(k);
-                Xinit = [Ginit Sinit Uinit];
+                %Uinit = Ustock(k);
+                Xinit = [Ginit Sinit];
                 f_targ = @(X) get_error_X1D_BSL(X,y,plant,Tmax,m);
                 
                 switch optm
                     case 1 % fmincon
                         Aeq = [];
                         beq = [];
-                        % used for TA and myu
-%                         lb =  [0.05   0]; % Lower bounds
-%                         ub =  [0.5 Inf]; % Upper bounds % 0.3 
-                        lb = [];
-                        ub = [];
+                         %used for TA and myu
+                         lb =  [0.05   0]; % Lower bounds
+                         ub =  [0.5 Inf]; % Upper bounds % 0.3 
+                        %lb = [];
+                        %ub = [];
                         
-                        Xopt = fmincon(f_targ,Xinit,[],[],Aeq,beq,lb,ub);   
+                        %Xopt = fmincon(f_targ,Xinit,[],[],Aeq,beq,lb,ub);   
+                        
+                         if m == 3 || m == 6 % 3:bootstrap acc, 6:mean acc of each sub
+                            temp = fmincon(f_targ,Xinit,[],[],Aeq,beq,lb,ub);
+                            Tmax_sim = (size(y,2))*plant.delt + .5;
+                            opt = sim_vel_X1D_BSL(temp,plant,Tmax_sim);
+                            error = nanmean((y(1:imax-1)-opt.acc(1:imax-1)).^2); % error
+                            Xopt{subject,bs}(count,:) = [Xinit temp error];     
+                        else
+                            Xopt = bads(f_targ,Xinit,lb,ub,plb,pub);    
+                        end
                         
                     case 2 % bads
-                        lb =  [0.04 0.0001 0.001]; % Lower bounds
-                        plb = [0.07 0.0001 0.001]; % Plausible Lower bounds
-                        pub = [0.2 0.1 0.1]; % Plausible Upper bounds
-                        ub =  [0.3 0.2 0.3]; % Upper bounds % 0.3
+                        lb =  [0.04 0.0001]; % Lower bounds
+                        plb = [0.07 0.0001]; % Plausible Lower bounds
+                        pub = [0.2 0.1]; % Plausible Upper bounds
+                        ub =  [0.3 0.2]; % Upper bounds % 0.3
                         
                         if m == 3 || m == 6 % 3:bootstrap acc, 6:mean acc of each sub
                             temp = bads(f_targ,Xinit,lb,ub,plb,pub);
@@ -187,19 +199,31 @@ for subject = 1:numofsubjects
                 count = count + 1;
                 
                 end
-            end
+            
         end
       
         Tmax_sim = (size(y,2))*plant.delt + .5;
         if m == 3 % bootstrap, acc
-            [M(subject,bs),I(subject,bs)] = min(Xopt{subject,bs}(:,7)); % choose G and U with minimum error
-            opt = sim_vel_X1D_BSL(Xopt{subject,bs}(I(subject,bs),4:6),plant,Tmax_sim); 
+            [M(subject,bs),I(subject,bs)] = min(Xopt{subject,bs}(:,5)); % choose G and U with minimum error
+            opt = sim_vel_X1D_BSL(Xopt{subject,bs}(I(subject,bs),3:4),plant,Tmax_sim); 
             
-            figure(10+subject); 
-            subplot(1,5,bs); hold on;
+            f = figure(10+subject);
+            set(f,'Position',[100 100,1200 600])
+            set(f,'Color','w')
+            
+            subplot(1,2,1); hold on;
             plot(delt*(1:length(y)),y,'color',cols(4,:,c),'linewidth',1.5)
             plot(delt*(1:imax),opt.acc(:,1:imax),'color',cols(1,:,c),'linewidth',1.5)
             plot([Xopt{subject,bs}(I(subject,bs),4),Xopt{subject,bs}(I(subject,bs),4)],[-300,400],'k','linewidth',1.5);
+%             legend('simulated data','fit')
+            xlabel('Time (s)','FontSize',10)
+            ylabel('Acceleration (m/s*s)','FontSize',10)
+            xlim([0 1]);
+            
+            subplot(1,2,2); hold on;
+            plot(delt*(1:length(ybs(bs,:))),ybs(bs,:),'color',cols(4,:,c),'linewidth',1.5)
+            plot(delt*(1:imax),opt.convo(:,1:imax),'color',cols(1,:,c),'linewidth',1.5)
+            plot([Xopt{subject,bs}(I(subject,bs),4),Xopt{subject,bs}(I(subject,bs),4)],[-5,50],'k','linewidth',1.5);
 %             legend('simulated data','fit')
             xlabel('Time (s)','FontSize',10)
             ylabel('Acceleration (m/s*s)','FontSize',10)
