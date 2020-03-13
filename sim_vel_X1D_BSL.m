@@ -3,7 +3,7 @@ function sim = sim_vel_X1D_BSL(X,plant,Tmax)
 delt = plant.delt;
 
 Tjump = ceil(X(1)/delt); % mean time of Target Jump is gittered (gausian distribition)
-sigma = abs(X(2))/delt; % variance of response time 
+% sigma = abs(X(2))/delt; % variance of response time 
 uamp = 1;%X(3); % amplitude of fitting function
 % uamp = X(2); % amplitude of fitting function
 
@@ -15,23 +15,25 @@ nstep = ceil(Tmax/delt); % number of timesteps to simulate
 x = 1:nstep;
 x(1,1) = start; % set starting hand position
 
-% simulate velocity with parameters X(1), X(2) 
-Y = uamp*power(max(x-Tjump,0),2)*delt;
+% simulate velocity with parameters X(1), X(2)
+% Y = uamp*power(max(x-Tjump,0),2)*delt;
+Y = uamp*power(max(x-Tjump,0),3)*delt;
 
 % convolve with Gaussian to account for variable response onset across
 % trials
-t_min = ceil(sigma)*3; % set convolution range to 3 standard deviations
-y_norm = normpdf(-t_min:t_min,0,sigma); % gausian distribution
+% t_min = ceil(sigma)*3; % set convolution range to 3 standard deviations
+% y_norm = normpdf(-t_min:t_min,0,sigma); % gausian distribution
 
 % save data to sim
 sim.x = Y;
-sim.convo = conv(Y,y_norm,'same');
-% sim.acc = diff(Y)/delt;
-sim.acc = diff(sim.convo)/delt;
+% sim.convo = conv(Y,y_norm,'same');
+sim.acc = diff(Y)/delt;
+% sim.acc = diff(sim.convo)/delt;
 sim.T = Tjump;
 sim.delt = delt;
 sim.plant = plant;
 sim.X = X;
+
 
 
 % figure(tr); cla

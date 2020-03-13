@@ -14,8 +14,8 @@ Tmax = .25; % max. time of simulation in s
 imax = ceil(Tmax/plant.delt); % max timestep to compare between model and data
 
 Gstock = 0.14;
-% Sstock = [0.001 0.002 0.003 0.004 0.005];
-Sstock = [0.01 0.02 0.03 0.04 0.05];
+Sstock = [0.001 0.002 0.003 0.004 0.005];
+% Sstock = [0.01 0.02 0.03 0.04 0.05];
 Ustock = [0.1 0.2 0.3 0.4 0.5];
 
 % change sigma
